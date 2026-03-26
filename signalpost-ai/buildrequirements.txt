@@ -1,0 +1,7 @@
+#Build COMMAND
+
+pip install -r requirements.txt
+
+
+#Start Command 
+gunicorn your_application.wsgi

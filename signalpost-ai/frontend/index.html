@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignalPost | AI for Devs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-8">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">SignalPost 📡 - Pronexus</h1>
+            <p class="text-slate-600">B2B LinkedIn Post Engine for Tech Leaders</p>
+        </header>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
+            <input id="apiKey" type="password" placeholder="Gemini API Key" class="w-full p-2 border rounded mb-4">
+            <div class="grid grid-cols-2 gap-4">
+                <select id="niche" class="p-2 border rounded">
+                    <option>AI Developer Tools</option>
+                    <option>Data Engineering</option>
+                </select>
+                <button onclick="generate()" id="genBtn" class="bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+                    Generate Posts
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="space-y-6"></div>
+    </div>
+
+    <script>
+        async function generate() {
+            const btn = document.getElementById('genBtn');
+            btn.innerText = "Generating...";
+            
+            const payload = {
+                niche: document.getElementById('niche').value,
+                tone: "Contrarian",
+                audience: "Senior Engineers",
+                api_key: document.getElementById('apiKey').value,
+                trend_signals: [
+                    {text: "Cursor IDE usage spikes 300%", source: "Hacker News"},
+                    {text: "New Gemini 1.5 Flash benchmarks released", source: "Twitter/X"}
+                ]
+            };
+
+            try {
+                const res = await fetch('http://localhost:8000/api/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                document.getElementById('results').innerHTML = data.posts.map(p => `
+                    <div class="bg-white p-6 rounded-lg border border-slate-200">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs font-bold text-blue-600">SCORE: ${p.lint_score}/100</span>
+                        </div>
+                        <p class="font-bold mb-2">${p.hook}</p>
+                        <p class="whitespace-pre-line text-slate-800">${p.body}</p>
+                    </div>
+                `).join('');
+            } catch (e) {
+                alert("Error: " + e.message);
+            } finally {
+                btn.innerText = "Generate Posts";
+            }
+        }
+    </script>
+</body>
+</html>
