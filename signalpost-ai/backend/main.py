@@ -8,8 +8,14 @@ from routes.services.linter import score_post
 from routes.services.prompts import build_gen_prompt
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # This allows any frontend to call your API
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class GenRequest(BaseModel):
     api_key: str
     niche: str

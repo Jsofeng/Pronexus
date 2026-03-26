@@ -44,11 +44,14 @@
                 ]
             };
 
-            try {
-                const res = await fetch('http://localhost:8000/api/generate', {
+            try { 
+                const res = await fetch('https://pronexus-1.onrender.com/api/generate', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        api_key: key, 
+                        niche: "AI for Software Engineering Productivity" // You can make this dynamic later
+                    })
                 });
                 const data = await res.json();
                 
