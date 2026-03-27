@@ -1,5 +1,5 @@
 import os, json
-import google.genai as genai #BUG google.genai doesn't exist fix 
+import google.generativeai as genai #BUG google.genai doesn't exist fix 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel

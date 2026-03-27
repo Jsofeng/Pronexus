@@ -1,6 +1,9 @@
+#root dir
+signalpost-ai
+
 #Build COMMAND
 
-pip install -r signalpost-ai/requirements.txt
+pip install -r requirements.txt
 
 #Start Command 
 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
