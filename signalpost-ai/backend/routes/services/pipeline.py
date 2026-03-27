@@ -1,4 +1,6 @@
 import httpx
+from backend.prompts import B2B_STYLE_GUIDE, POST_TEMPLATE
+import google.generativeai as genai
 from datetime import datetime, timedelta
 
 class DataPipeline:
@@ -19,3 +21,32 @@ class DataPipeline:
             r = await client.get(url, headers=headers)
             posts = r.json()["data"]["children"]
             return [{"text": p["data"]["title"], "source": "r/programming"} for p in posts]
+        
+
+# backend/routes/services/pipeline.py
+
+class LinkedInGenerator:
+    def __init__(self, api_key: str):
+    
+        genai.configure(api_key=api_key, transport='rest')
+        
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        print("🚀 Generator Initialized with API Key")
+    
+    async def generate_post(self, industry: str, topic: str):
+
+        trend_brief = f"Latest trend in {industry}: focus on {topic} for ROI."
+        
+        prompt = POST_TEMPLATE.format(
+            industry=industry,
+            topic_brief=trend_brief,
+            style_guide=B2B_STYLE_GUIDE
+        )
+        
+        
+        response = self.model.generate_content(
+            prompt, 
+            request_options={"timeout": 600} 
+        )        
+        
+        return response.text
