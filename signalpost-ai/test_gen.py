@@ -8,8 +8,11 @@ load_dotenv()
 async def main():
     gen = LinkedInGenerator(api_key=os.getenv("GOOGLE_API_KEY"))
     post = await gen.generate_post("Investment Banking", "AI workflows in Excel")
+    reddit_post = await gen.generate_post("Biggest ROI Stocks", "Anthropic latest news")
     print("\n--- GENERATED POST ---")
     print(post)
+    print("\n--- GENERATED POST REDDIT ---")
+    print(reddit_post)
 
 if __name__ == "__main__":
     asyncio.run(main())

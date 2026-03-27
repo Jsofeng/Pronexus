@@ -1,5 +1,3 @@
-# backend/prompts.py
-
 B2B_STYLE_GUIDE = """
 - RHYTHM: Use 1-2-3 punch (Short line, medium line, list).
 - HOOKS: Use "Pattern Interrupts." (e.g., "Most engineers think X. They are wrong.")
