@@ -3,9 +3,9 @@ import google.generativeai as genai #BUG google.genai doesn't exist fix
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from routes.services.pipeline import DataPipeline
-from routes.services.linter import score_post
-from routes.services.prompts import build_gen_prompt
+from backend.routes.services.pipeline import DataPipeline
+from backend.routes.services.linter import score_post
+from backend.routes.services.prompts import build_gen_prompt
 
 app = FastAPI()
 
