@@ -1,9 +1,13 @@
-#root dir
-signalpost-ai
+#1 
+open index.html on browser 
 
-#Build COMMAND
+#2
 
-pip install -r requirements.txt
+cd signalpost-ai/
 
-#Start Command 
-uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+#3
+
+uvicorn app:app --reload
+
+#4
+insert gemini api key under "Gemini API Key" select any industry/niche -> generate post
