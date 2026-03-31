@@ -1,4 +1,4 @@
-# SignalPost — Workflow Design & System Overview
+# SignalPost  Workflow Design & System Overview
 
 ---
 
@@ -15,11 +15,11 @@
 
 Both sources are fetched via `httpx` async HTTP calls at the moment a user clicks **Generate Posts**. The pipeline pulls the top 15–25 items from each source, shuffles them to avoid always surfacing the same headlines, and selects a random subset of 3 to inject into the prompt as `topic_brief`.
 
-The shuffle is intentional — it ensures variety across multiple generations in the same session, simulating a broader "scan" of the internet rather than always anchoring to the #1 trending post.
+The shuffle is intentional  it ensures variety across multiple generations in the same session, simulating a broader "scan" of the internet rather than always anchoring to the #1 trending post.
 
 ### What a Production Cadence Would Look Like
 
-In the current architecture, ingestion is **synchronous and on-demand** — signals are fetched fresh every time a user generates posts. This works for a prototype but doesn't scale.
+In the current architecture, ingestion is **synchronous and on-demand**  signals are fetched fresh every time a user generates posts. This works for a prototype but doesn't scale.
 
 A production cadence would decouple ingestion from generation:
 
@@ -41,9 +41,9 @@ This means the API call becomes near-instant (no live HTTP fetches in the hot pa
 
 The prompt is assembled in `prompts.py` using a `POST_TEMPLATE` string with three injected variables:
 
-- `{industry}` — the user-selected niche (e.g. "Data Engineering")
-- `{topic_brief}` — 3 bullet points from the live signal fetch
-- `{style_guide}` — a static set of writing constraints
+- `{industry}`  the user-selected niche (e.g. "Data Engineering")
+- `{topic_brief}`  3 bullet points from the live signal fetch
+- `{style_guide}`  a static set of writing constraints
 
 ```
 Role definition
@@ -65,7 +65,7 @@ The prompt explicitly says: *"Respond ONLY with a valid JSON array, no markdown,
 
 **3. Style guide as a negative constraint list**
 
-`B2B_STYLE_GUIDE` is mostly a list of things *not* to do ("delete words like 'Unleash', 'Tapestry'") rather than aspirational guidance. Negative constraints are more reliable than positive ones — the model has a clear rejection criterion rather than an ambiguous goal.
+`B2B_STYLE_GUIDE` is mostly a list of things *not* to do ("delete words like 'Unleash', 'Tapestry'") rather than aspirational guidance. Negative constraints are more reliable than positive ones the model has a clear rejection criterion rather than an ambiguous goal.
 
 **4. One post per call**
 
@@ -81,7 +81,7 @@ Output is passed through `linter.py` which applies a rule-based scoring function
 | Em-dash detected | -10 pts | `em_dash_detected` |
 | No hard metric (`\d+%`, `\d+x`, `$\d+`) | -15 pts | `missing_hard_metrics` |
 
-A `lint_score` out of 100 is returned to the frontend alongside any flags. Posts are not rejected by score — they are surfaced to the user with transparency, which is the right call for a v1 where false positives from the linter would be frustrating.
+A `lint_score` out of 100 is returned to the frontend alongside any flags. Posts are not rejected by score they are surfaced to the user with transparency, which is the right call for a v1 where false positives from the linter would be frustrating.
 
 ---
 
@@ -119,11 +119,11 @@ A `lint_score` out of 100 is returned to the frontend alongside any flags. Posts
 
 ### How I Would Make It More Cost-Effective
 
-**Prompt caching.** The `B2B_STYLE_GUIDE` and structural instructions are static. Anthropic and Google both support prompt caching — marking the static prefix as cacheable reduces token costs by 80–90% on the system prompt portion.
+**Prompt caching.** The `B2B_STYLE_GUIDE` and structural instructions are static. Anthropic and Google both support prompt caching marking the static prefix as cacheable reduces token costs by 80–90% on the system prompt portion.
 
 **Tiered model routing.** Use a cheap, fast model (Gemini Flash, GPT-4o mini) for initial generation, then only escalate to a premium model if the lint score is below a threshold. Most posts won't need the upgrade.
 
-**Signal cache.** As described above — fetch signals on a 6-hour cron rather than per-request. This eliminates the live HTTP cost and latency from every user request.
+**Signal cache.** As described above fetch signals on a 6-hour cron rather than per-request. This eliminates the live HTTP cost and latency from every user request.
 
 ### How I Would Make It Safer
 
@@ -137,7 +137,7 @@ A `lint_score` out of 100 is returned to the frontend alongside any flags. Posts
 
 The core scaling challenge is that quality degrades with volume if every post is generated the same way. The strategy is to **scale the pipeline, not just the throughput.**
 
-**Stage 1 — Async job queue (dozens → low hundreds/week)**
+**Stage 1  Async job queue (dozens → low hundreds/week)**
 
 Move generation off the synchronous request/response cycle into a background worker queue (Celery + Redis). The user submits a job, gets a job ID, and polls for results. This decouples generation time from HTTP timeout constraints and allows retries on failure.
 
@@ -146,14 +146,14 @@ POST /api/generate → { job_id: "abc123" }
 GET  /api/jobs/abc123 → { status: "complete", posts: [...] }
 ```
 
-**Stage 2 — Batch generation with diversity enforcement (hundreds/week)**
+**Stage 2  Batch generation with diversity enforcement (hundreds/week)**
 
 When generating many posts for the same niche in a week, enforce semantic diversity across the batch. Before each generation, embed all posts already generated that week and reject any new post whose embedding is within a similarity threshold of an existing one. Re-generate until the batch is diverse.
 
-**Stage 3 — Human-in-the-loop quality gate**
+**Stage 3  Human-in-the-loop quality gate**
 
 At volume, an LLM-as-judge score above a threshold (e.g. 75/100) auto-approves the post. Posts scoring below threshold enter a human review queue rather than being discarded, since the issue might be the signal rather than the generation. A simple internal review UI (even just a Retool dashboard) makes this manageable with minimal effort.
 
-**Stage 4 — Per-niche fine-tuning signals**
+**Stage 4  Per-niche fine-tuning signals**
 
-At hundreds of posts per week, you accumulate enough approved/rejected examples per niche to fine-tune a small model (or build a high-quality few-shot library) specifically for that niche. This compounds — the more posts generated for "Cybersecurity," the better the Cybersecurity prompt becomes, without increasing cost.
+At hundreds of posts per week, you accumulate enough approved/rejected examples per niche to fine-tune a small model (or build a high-quality few-shot library) specifically for that niche. This compounds the more posts generated for "Cybersecurity," the better the Cybersecurity prompt becomes, without increasing cost.
