@@ -5,15 +5,19 @@ B2B_STYLE_GUIDE = """
 - CTAs: Soft value-adds only. No "Buy now."
 """
 
-POST_TEMPLATE = """
-Role: Expert B2B Content Strategist for {industry}.
-Topic: {topic_brief}
-Constraints: 
-1. Hook must be under 10 words.
-2. Use white space between every 2 lines.
-3. Include one specific "hard number" or technical metric.
-4. Final line must be a "Contrarian Take."
 
-Follow this Style Guide:
+POST_TEMPLATE = """You are a B2B content strategist for {industry}.
+
+Using these trending topics:
+{topic_brief}
+
+Write exactly 1 LinkedIn post. Rules:
+1. Hook must be under 10 words.
+2. Include one specific number or metric.
+3. Final line must be a contrarian take.
+4. Use white space between paragraphs.
+
 {style_guide}
-"""
+
+Respond ONLY with a valid JSON array, no markdown, no explanation:
+[{{"hook": "your hook here", "body": "your body here"}}]"""

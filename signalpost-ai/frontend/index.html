@@ -2,27 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SignalPost | AI for Devs</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 p-8">
+<body class="bg-slate-50 p-4 md:p-8">
     <div class="max-w-3xl mx-auto">
         <header class="mb-8">
-            <h1 class="text-3xl font-bold text-slate-900">SignalPost 📡 - Pronexus</h1>
+            <h1 class="text-3xl font-bold text-slate-900">SignalPost 📡</h1>
             <p class="text-slate-600">B2B LinkedIn Post Engine for Tech Leaders</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
-            <input id="apiKey" type="password" placeholder="Gemini API Key" class="w-full p-2 border rounded mb-4">
-            <div class="grid grid-cols-2 gap-4">
-                <select id="niche" class="p-2 border rounded">
-                    <option>AI Developer Tools</option>
-                    <option>Data Engineering</option>
-                </select>
-                <button onclick="generate()" id="genBtn" class="bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
-                    Generate Posts
-                </button>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gemini API Key</label>
+            <input id="apiKey" type="password" placeholder="Enter your key..." class="w-full p-2 border rounded mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Industry/Niche</label>
+                    <select id="niche" class="w-full p-2 border rounded bg-white">
+                        <option value="AI Developer Tools">AI Developer Tools</option>
+                        <option value="Data Engineering">Data Engineering</option>
+                        <option value="Cybersecurity">Cybersecurity</option>
+                        <option value="Cloud Infrastructure">Cloud Infrastructure</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="generate()" id="genBtn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition-colors disabled:opacity-50">
+                        Generate Posts
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-slate-500 italic">Scanning Hacker News & Reddit for signals...</p>
         </div>
 
         <div id="results" class="space-y-6"></div>
@@ -31,43 +47,70 @@
     <script>
         async function generate() {
             const btn = document.getElementById('genBtn');
-            btn.innerText = "Generating...";
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            const apiKey = document.getElementById('apiKey').value;
+            const niche = document.getElementById('niche').value;
+
+            if (!apiKey) {
+                alert("Please enter your Gemini API Key");
+                return;
+            }
+
+            // UI Feedback
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            resultsDiv.innerHTML = "";
+            loadingDiv.classList.remove('hidden');
             
             const payload = {
-                niche: document.getElementById('niche').value,
-                tone: "Contrarian",
-                audience: "Senior Engineers",
-                api_key: document.getElementById('apiKey').value,
-                trend_signals: [
-                    {text: "Cursor IDE usage spikes 300%", source: "Hacker News"},
-                    {text: "New Gemini 1.5 Flash benchmarks released", source: "Twitter/X"}
-                ]
+                niche: niche,
+                api_key: apiKey
             };
 
             try { 
-                const res = await fetch('https://pronexus-2.onrender.com/api/generate', {
+                // Using localhost for development. Update this URL when you deploy to Render.
+                const res = await fetch('http://localhost:8000/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        api_key: key, 
-                        niche: "AI for Software Engineering Productivity" // You can make this dynamic later
-                    })
+                    body: JSON.stringify(payload)
                 });
+
+                if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+
                 const data = await res.json();
                 
-                document.getElementById('results').innerHTML = data.posts.map(p => `
-                    <div class="bg-white p-6 rounded-lg border border-slate-200">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-xs font-bold text-blue-600">SCORE: ${p.lint_score}/100</span>
+                if (!data.posts || data.posts.length === 0) {
+                    resultsDiv.innerHTML = `<p class="text-center text-slate-500">No posts generated. Check backend logs.</p>`;
+                    return;
+                }
+
+                resultsDiv.innerHTML = data.posts.map(p => `
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded">
+                                LINT SCORE: ${p.lint_score || 'N/A'}/100
+                            </span>
+                            ${p.flags && p.flags.length > 0 ? `<span class="text-xs text-amber-600">⚠️ ${p.flags.length} issues found</span>` : ''}
                         </div>
-                        <p class="font-bold mb-2">${p.hook}</p>
-                        <p class="whitespace-pre-line text-slate-800">${p.body}</p>
+                        <h3 class="font-bold text-lg mb-3 text-slate-900 leading-tight">${p.hook}</h3>
+                        <p class="whitespace-pre-line text-slate-700 leading-relaxed">${p.body}</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+                             <button onclick="navigator.clipboard.writeText(\`${p.hook}\\n\\n\${p.body}\`)" class="text-xs text-slate-400 hover:text-blue-600">Copy to Clipboard</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (e) {
-                alert("Error: " + e.message);
+                console.error(e);
+                resultsDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 p-4 rounded text-red-700 text-sm">
+                        <strong>Connection Error:</strong> ${e.message}. <br>Make sure your FastAPI server is running (uvicorn app:app --reload).
+                    </div>
+                `;
             } finally {
+                btn.disabled = false;
                 btn.innerText = "Generate Posts";
+                loadingDiv.classList.add('hidden');
             }
         }
     </script>
