@@ -1,0 +1,13 @@
+#1 
+open index.html on browser 
+
+#2
+
+cd signalpost-ai/
+
+#3
+
+uvicorn app:app --reload
+
+#4
+insert gemini api key under "Gemini API Key" select any industry/niche -> generate post
